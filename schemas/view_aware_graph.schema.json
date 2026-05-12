@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/view-aware-graph.schema.json",
+  "title": "View-Aware Graph",
+  "type": "object",
+  "required": ["schema_version", "source", "view", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "source": {
+      "type": "object",
+      "required": ["image_id"],
+      "additionalProperties": false,
+      "properties": {
+        "image_id": { "type": "string", "minLength": 1 },
+        "image_path": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["frame", "assumptions"],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "type": "string",
+          "enum": ["image", "camera", "unknown"]
+        },
+        "camera_pose_hint": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "heading": { "type": ["number", "null"] },
+            "pitch": { "type": ["number", "null"] },
+            "roll": { "type": ["number", "null"] }
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "global_observations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "bbox_2d": {
+      "type": "object",
+      "required": ["x", "y", "width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number", "minimum": 0 },
+        "y": { "type": "number", "minimum": 0 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "type", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "building",
+            "road",
+            "sidewalk",
+            "traffic_sign",
+            "traffic_light",
+            "pole",
+            "vegetation",
+            "vehicle",
+            "street_furniture",
+            "sky",
+            "unknown"
+          ]
+        },
+        "bbox_2d": { "$ref": "#/$defs/bbox_2d" },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "evidence": { "type": "string" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["source", "target", "relation", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "left_of",
+            "right_of",
+            "above",
+            "below",
+            "in_front_of",
+            "behind",
+            "adjacent_to",
+            "overlaps",
+            "contains",
+            "part_of",
+            "supports",
+            "aligned_with",
+            "unknown"
+          ]
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "evidence": { "type": "string" }
+      }
+    }
+  }
+}

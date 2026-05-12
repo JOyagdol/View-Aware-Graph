@@ -1,0 +1,15 @@
+[project]
+schema_version = "0.1.0"
+
+[vlm]
+provider = ""
+model = ""
+temperature = 0.0
+max_retries = 2
+
+[paths]
+raw_data = "data/raw"
+interim_data = "data/interim"
+processed_data = "data/processed"
+schema = "schemas/view_aware_graph.schema.json"
+prompt = "prompts/view_graph_extraction.md"
