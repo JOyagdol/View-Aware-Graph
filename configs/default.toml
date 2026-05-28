@@ -4,8 +4,10 @@ schema_version = "0.1.0"
 [vlm]
 provider = ""
 model = ""
+endpoint = "http://127.0.0.1:11434/api/generate"
 temperature = 0.0
 max_retries = 2
+timeout_seconds = 600.0
 
 [paths]
 raw_data = "data/raw"

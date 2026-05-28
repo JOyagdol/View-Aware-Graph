@@ -1,8 +1,6 @@
 # View-Aware Graph
 
-View-Aware Graph extracts a structured, viewpoint-aware graph JSON from a single input image using a VLM.
-
-This repository owns the first stage of the broader city-scene localization pipeline:
+View-Aware Graph extracts a structured, viewpoint-aware graph JSON from a single image using a Vision-Language Model.
 
 ```text
 Input Image
@@ -10,94 +8,133 @@ Input Image
   -> Structured View-Aware Graph JSON
 ```
 
-The downstream pipeline is kept as context only:
+This repository owns only the image-to-graph extraction stage. Downstream Cypher generation, Neo4j retrieval, graph similarity matching, localization, and mapping are intentionally out of scope here.
 
-```text
-Structured View-Aware Graph JSON
-  -> Rule-based Cypher Query Generator
-  -> Neo4j World Graph Retrieval
-  -> Graph Similarity Matching
-  -> Localization / Mapping
-```
+## What It Produces
 
-## Goal
+The target output is schema-valid JSON containing:
 
-Given an indoor scene image, the project aims to produce a machine-readable JSON graph that captures:
-
-- visible scene objects
-- viewpoint-aware spatial relationships
-- object and relation confidence
 - source image metadata
-- evidence or uncertainty from the VLM response
+- viewpoint assumptions
+- observed scene nodes
+- view-aware spatial relations
+- confidence values
+- visual evidence text
+- uncertainty and occlusion notes when available
 
-The output contract is currently defined in [`schemas/view_aware_graph.schema.json`](schemas/view_aware_graph.schema.json).
+The current output contract is [`schemas/view_aware_graph.schema.json`](schemas/view_aware_graph.schema.json).
 
-## Repository Layout
+## Current Capabilities
 
-```text
-configs/                  Runtime and experiment configuration
-data/                     Local data workspace; contents ignored by Git
-docs/en/                  Tracked project documentation
-examples/                 Small shareable sample inputs and outputs
-prompts/                  VLM prompt templates
-schemas/                  JSON schema contracts
-scripts/                  CLI and utility scripts
-src/view_aware_graph/     Python package source
-tests/                    Test suite
-```
+- Versioned extraction prompt in [`prompts/view_graph_extraction.md`](prompts/view_graph_extraction.md)
+- Provider-neutral VLM request/response interface
+- Local Ollama adapter for Qwen vision models
+- CLI workflow through `view-aware-graph extract`
+- JSON parsing from VLM/Ollama responses
+- JSON Schema validation with readable errors
+- Conservative repair for common relation vocabulary drift
+- Unit tests for parsing, validation, adapter behavior, and CLI workflow
 
-See [`docs/en/CONVENTIONS.md`](docs/en/CONVENTIONS.md) for project rules, documentation policy, and structure conventions.
+## Not Included
 
-## Local Setup
+This repository does not implement:
 
-Create the conda environment:
+- Cypher query generation
+- Neo4j world graph retrieval
+- graph similarity matching
+- localization or mapping
+- model fine-tuning
+- private image or dataset publication
 
-```powershell
+Fine-tuning may be considered later only after enough curated image/GT-graph pairs exist.
+
+## Setup
+
+Create and activate the conda environment:
+
+```bash
 conda env create -f environment.yml
-```
-
-Activate it:
-
-```powershell
 conda activate view-aware-graph
-```
-
-Run checks from inside the environment:
-
-```powershell
-pytest
 ```
 
 If the environment already exists:
 
-```powershell
+```bash
 conda env update -f environment.yml --prune
 conda activate view-aware-graph
 ```
 
-Python commands and tests are expected to be run by the project owner inside the conda environment.
+Install the package in editable mode:
 
-## Configuration
+```bash
+pip install -e .[dev]
+```
 
-Copy `.env.example` to `.env` for local VLM credentials and settings. Never commit `.env`.
+Run checks:
 
-Repeatable project defaults live in [`configs/default.toml`](configs/default.toml).
+```bash
+ruff check .
+mypy
+pytest
+```
 
-## Ubuntu Server Runtime
+## Local Ollama Run
 
-For the Proxmox Ubuntu 22.04 Server VM used for local Ollama/Qwen inference, see [`docs/en/UBUNTU_2204_SERVER_SETUP.md`](docs/en/UBUNTU_2204_SERVER_SETUP.md).
+Set the local adapter environment:
 
-For Codex handoff on the Ubuntu server, see [`docs/en/CODEX_UBUNTU_HANDOFF.md`](docs/en/CODEX_UBUNTU_HANDOFF.md).
+```bash
+export VLM_PROVIDER=ollama
+export VLM_MODEL=qwen2.5vl:7b
+```
 
-## Current Status
+Run the GT lobby image:
 
-The repository is in the first pipeline design stage:
+```bash
+view-aware-graph extract \
+  --image data/raw/smartcitylab_lobby/SmartCityLab_Lobby_GT.jpg \
+  --config configs/default.toml \
+  --output data/processed/view_graphs/smartcitylab_lobby_gt_cli.json \
+  --run-id smartcitylab_lobby_gt_cli \
+  --verbose
+```
 
-- project conventions are defined
-- repository structure is initialized
-- conda environment file is available
-- general View-Aware Graph scheme is documented
-- JSON schema is aligned to the indoor image-to-graph contract
-- first GT-derived synthetic output example is available
-- first VLM candidate shortlist and evaluation rubric are documented
-- Ubuntu 22.04 Server runtime setup is documented for local Ollama inference
+For the 32B comparison run:
+
+```bash
+export VLM_MODEL=qwen2.5vl:32b
+export VLM_TIMEOUT_SECONDS=1800
+
+view-aware-graph extract \
+  --image data/raw/smartcitylab_lobby/SmartCityLab_Lobby_GT.jpg \
+  --config configs/default.toml \
+  --output data/processed/view_graphs/smartcitylab_lobby_gt_qwen2_5vl_32b_cli.json \
+  --run-id smartcitylab_lobby_gt_qwen2_5vl_32b_cli \
+  --verbose
+```
+
+Generated raw and processed outputs are written under ignored local directories:
+
+```text
+data/interim/vlm_raw/
+data/processed/view_graphs/
+```
+
+The CLI also writes a PNG graph overlay next to the graph JSON by default:
+
+```text
+data/processed/view_graphs/<run_id>.png
+```
+
+## Documentation
+
+- Project rules: [`docs/en/CONVENTIONS.md`](docs/en/CONVENTIONS.md)
+- Graph scheme: [`docs/en/VIEW_AWARE_GRAPH_SCHEME.md`](docs/en/VIEW_AWARE_GRAPH_SCHEME.md)
+- CLI workflow: [`docs/en/CLI_WORKFLOW.md`](docs/en/CLI_WORKFLOW.md)
+- VLM interface: [`docs/en/VLM_INTERFACE.md`](docs/en/VLM_INTERFACE.md)
+- Model candidates: [`docs/en/VLM_MODEL_CANDIDATES.md`](docs/en/VLM_MODEL_CANDIDATES.md)
+- Evaluation rubric: [`docs/en/VLM_EVALUATION_RUBRIC.md`](docs/en/VLM_EVALUATION_RUBRIC.md)
+- Current tasks: [`docs/en/TODO.md`](docs/en/TODO.md)
+
+## Data Policy
+
+Local raw images, raw VLM responses, generated graph outputs, and Korean local documentation are ignored by Git by default. Only small, safe examples should be committed intentionally.
