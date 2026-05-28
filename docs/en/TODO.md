@@ -170,7 +170,7 @@ Success criteria:
 
 ## Current Next Step
 
-- [ ] Project owner runs schema validation in the conda environment for `examples/outputs/smartcitylab_lobby_gt_minimal.json`.
+- [ ] Project owner runs schema validation with `python3.11` on the Ubuntu server for `examples/outputs/smartcitylab_lobby_gt_minimal.json`.
 - [ ] Prepare an inference-only local/free VLM smoke test path for Qwen2.5-VL-3B-Instruct, then Qwen2.5-VL-7B-Instruct.
 - [ ] Prepare a 32GB VRAM local test path for Qwen2.5-VL-32B-Instruct quantized and Qwen3-VL-32B-Instruct quantized.
 - [ ] Start Phase 5: define the provider-neutral VLM adapter interface under `src/view_aware_graph/vlm/` with local/free and paid-provider implementations separated.

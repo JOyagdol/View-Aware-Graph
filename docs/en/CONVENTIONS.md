@@ -153,8 +153,9 @@ Source reference: `https://github.com/forrestchang/andrej-karpathy-skills`
 
 ## Testing and Validation
 
-- If Python code execution or testing is needed, tell the project owner first. The project owner will run Python commands inside their conda environment.
-- Use conda as the only documented local setup path unless the project owner asks for a different environment strategy.
+- If Python code execution or testing is needed, tell the project owner first.
+- Use conda as the documented Windows/local development setup path unless the project owner asks for a different environment strategy.
+- On the dedicated Ubuntu 22.04 Server runtime, use `python3.11` as documented in `docs/en/UBUNTU_2204_SERVER_SETUP.md`; do not change the system `python3` default.
 - Add tests under `tests/` for schema validation, graph transforms, and provider-independent parsing logic.
 - Mock VLM calls in tests unless an explicit integration test is being run.
 - Validate representative JSON outputs against `schemas/view_aware_graph.schema.json`.

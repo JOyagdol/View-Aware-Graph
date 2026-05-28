@@ -323,16 +323,18 @@ git clone https://github.com/JOyagdol/View-Aware-Graph.git
 cd View-Aware-Graph
 ```
 
-Install minimal Python dependencies only if schema validation or project CLI scripts are needed:
+Install minimal Python dependencies only if schema validation or project CLI scripts are needed.
+
+Use `python3.11` on this Ubuntu server. Do not change the system `python3` default, because Ubuntu 22.04 uses Python 3.10 for OS packages.
 
 ```bash
-python3 -m pip install --user -e .
+python3.11 -m pip install --user -e .
 ```
 
 For development tools:
 
 ```bash
-python3 -m pip install --user -e ".[dev]"
+python3.11 -m pip install --user -e ".[dev]"
 ```
 
 ## Smoke Test Flow

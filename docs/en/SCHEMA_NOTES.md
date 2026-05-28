@@ -25,4 +25,4 @@ The minimal GT-derived synthetic example is:
 examples/outputs/smartcitylab_lobby_gt_minimal.json
 ```
 
-Python schema validation still needs to be run by the project owner in the conda environment.
+Python schema validation still needs to be run by the project owner in the appropriate runtime: conda for Windows/local development, or `python3.11` on the Ubuntu server.
