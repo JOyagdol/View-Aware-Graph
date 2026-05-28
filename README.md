@@ -22,7 +22,7 @@ Structured View-Aware Graph JSON
 
 ## Goal
 
-Given an urban scene image, the project aims to produce a machine-readable JSON graph that captures:
+Given an indoor scene image, the project aims to produce a machine-readable JSON graph that captures:
 
 - visible scene objects
 - viewpoint-aware spatial relationships
@@ -83,11 +83,21 @@ Copy `.env.example` to `.env` for local VLM credentials and settings. Never comm
 
 Repeatable project defaults live in [`configs/default.toml`](configs/default.toml).
 
+## Ubuntu Server Runtime
+
+For the Proxmox Ubuntu 22.04 Server VM used for local Ollama/Qwen inference, see [`docs/en/UBUNTU_2204_SERVER_SETUP.md`](docs/en/UBUNTU_2204_SERVER_SETUP.md).
+
+For Codex handoff on the Ubuntu server, see [`docs/en/CODEX_UBUNTU_HANDOFF.md`](docs/en/CODEX_UBUNTU_HANDOFF.md).
+
 ## Current Status
 
-The repository is in the foundation stage:
+The repository is in the first pipeline design stage:
 
 - project conventions are defined
 - repository structure is initialized
 - conda environment file is available
-- initial View-Aware Graph JSON schema placeholder is available
+- general View-Aware Graph scheme is documented
+- JSON schema is aligned to the indoor image-to-graph contract
+- first GT-derived synthetic output example is available
+- first VLM candidate shortlist and evaluation rubric are documented
+- Ubuntu 22.04 Server runtime setup is documented for local Ollama inference
