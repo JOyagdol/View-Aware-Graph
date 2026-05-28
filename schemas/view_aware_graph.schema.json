@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/view-aware-graph.schema.json",
   "title": "View-Aware Graph",
+  "description": "Provider-neutral JSON contract for image-observed View-Aware Graph outputs.",
   "type": "object",
   "required": ["schema_version", "source", "view", "nodes", "edges"],
   "additionalProperties": false,
@@ -17,6 +18,7 @@
       "properties": {
         "image_id": { "type": "string", "minLength": 1 },
         "image_path": { "type": "string" },
+        "image_dimensions": { "$ref": "#/$defs/image_dimensions" },
         "timestamp": { "type": "string" },
         "metadata": {
           "type": "object",
@@ -26,12 +28,20 @@
     },
     "view": {
       "type": "object",
-      "required": ["frame", "assumptions"],
+      "required": ["frame", "coordinate_origin", "bbox_format", "assumptions"],
       "additionalProperties": false,
       "properties": {
         "frame": {
           "type": "string",
           "enum": ["image", "camera", "unknown"]
+        },
+        "coordinate_origin": {
+          "type": "string",
+          "enum": ["top_left", "unknown"]
+        },
+        "bbox_format": {
+          "type": "string",
+          "enum": ["normalized_xywh", "region_only", "unknown"]
         },
         "camera_pose_hint": {
           "type": "object",
@@ -39,12 +49,14 @@
           "properties": {
             "heading": { "type": ["number", "null"] },
             "pitch": { "type": ["number", "null"] },
-            "roll": { "type": ["number", "null"] }
+            "roll": { "type": ["number", "null"] },
+            "confidence": { "$ref": "#/$defs/confidence" }
           }
         },
+        "viewpoint_confidence": { "$ref": "#/$defs/confidence" },
         "assumptions": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     },
@@ -58,19 +70,28 @@
     },
     "global_observations": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": { "type": "string", "minLength": 1 }
     }
   },
   "$defs": {
+    "image_dimensions": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
     "bbox_2d": {
       "type": "object",
       "required": ["x", "y", "width", "height"],
       "additionalProperties": false,
       "properties": {
-        "x": { "type": "number", "minimum": 0 },
-        "y": { "type": "number", "minimum": 0 },
-        "width": { "type": "number", "exclusiveMinimum": 0 },
-        "height": { "type": "number", "exclusiveMinimum": 0 }
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
       }
     },
     "confidence": {
@@ -78,69 +99,138 @@
       "minimum": 0,
       "maximum": 1
     },
+    "uncertainty": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "occluded",
+          "low_resolution",
+          "glare_or_reflection",
+          "ambiguous_type",
+          "screen_content",
+          "viewpoint_inferred",
+          "partial_object",
+          "transient_object"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "node_type": {
+      "type": "string",
+      "enum": [
+        "wall",
+        "door",
+        "window",
+        "opening",
+        "floor",
+        "ceiling",
+        "surface",
+        "panel",
+        "furniture",
+        "object",
+        "unknown"
+      ]
+    },
+    "relation_type": {
+      "type": "string",
+      "enum": [
+        "left_of",
+        "right_of",
+        "above",
+        "below",
+        "overlaps",
+        "contains",
+        "in_front_of",
+        "behind",
+        "attached_to",
+        "mounted_on",
+        "standing_on",
+        "supports",
+        "part_of",
+        "adjacent_to",
+        "aligned_with",
+        "unknown"
+      ]
+    },
     "node": {
       "type": "object",
-      "required": ["id", "label", "type", "confidence"],
+      "required": ["id", "label", "type", "confidence", "evidence"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "label": { "type": "string", "minLength": 1 },
-        "type": {
+        "type": { "$ref": "#/$defs/node_type" },
+        "subtype": { "type": "string", "minLength": 1 },
+        "bbox_2d": { "$ref": "#/$defs/bbox_2d" },
+        "region": {
           "type": "string",
           "enum": [
-            "building",
-            "road",
-            "sidewalk",
-            "traffic_sign",
-            "traffic_light",
-            "pole",
-            "vegetation",
-            "vehicle",
-            "street_furniture",
-            "sky",
+            "upper_left",
+            "upper_center",
+            "upper_right",
+            "center_left",
+            "center",
+            "center_right",
+            "lower_left",
+            "lower_center",
+            "lower_right",
+            "left",
+            "right",
+            "top",
+            "bottom",
+            "full_frame",
             "unknown"
           ]
         },
-        "bbox_2d": { "$ref": "#/$defs/bbox_2d" },
+        "depth_hint": {
+          "type": "string",
+          "enum": ["near", "mid", "far", "unknown"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["high", "medium", "low", "support"]
+        },
+        "occlusion": {
+          "type": "string",
+          "enum": ["none", "partial", "heavy", "unknown"]
+        },
+        "uncertainty": { "$ref": "#/$defs/uncertainty" },
         "attributes": {
           "type": "object",
           "additionalProperties": true
         },
+        "world_candidate_types": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "world_alignment_note": { "type": "string" },
         "confidence": { "$ref": "#/$defs/confidence" },
-        "evidence": { "type": "string" }
+        "evidence": { "type": "string", "minLength": 1 }
       }
     },
     "edge": {
       "type": "object",
-      "required": ["source", "target", "relation", "confidence"],
+      "required": ["id", "source", "target", "relation", "confidence", "evidence"],
       "additionalProperties": false,
       "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "source": { "type": "string", "minLength": 1 },
         "target": { "type": "string", "minLength": 1 },
-        "relation": {
-          "type": "string",
-          "enum": [
-            "left_of",
-            "right_of",
-            "above",
-            "below",
-            "in_front_of",
-            "behind",
-            "adjacent_to",
-            "overlaps",
-            "contains",
-            "part_of",
-            "supports",
-            "aligned_with",
-            "unknown"
-          ]
-        },
+        "relation": { "$ref": "#/$defs/relation_type" },
         "attributes": {
           "type": "object",
           "additionalProperties": true
         },
+        "uncertainty": { "$ref": "#/$defs/uncertainty" },
+        "world_relation_hints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
         "confidence": { "$ref": "#/$defs/confidence" },
-        "evidence": { "type": "string" }
+        "evidence": { "type": "string", "minLength": 1 }
       }
     }
   }

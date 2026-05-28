@@ -1,0 +1,168 @@
+{
+  "schema_version": "0.1.0",
+  "source": {
+    "image_id": "smartcitylab_lobby_gt_synthetic_example",
+    "image_path": "data/raw/smartcitylab_lobby/SmartCityLab_Lobby_GT.jpg",
+    "image_dimensions": {
+      "width": 4000,
+      "height": 3000
+    },
+    "metadata": {
+      "example_type": "synthetic_schema_example",
+      "note": "Small hand-written example derived from the GT sketch, not a committed raw image annotation."
+    }
+  },
+  "view": {
+    "frame": "image",
+    "coordinate_origin": "top_left",
+    "bbox_format": "normalized_xywh",
+    "viewpoint_confidence": 0.7,
+    "assumptions": [
+      "Single indoor lobby image.",
+      "Normalized boxes use top-left origin.",
+      "Depth hints are inferred from occlusion and image layout."
+    ]
+  },
+  "nodes": [
+    {
+      "id": "wall_center",
+      "label": "central white wall",
+      "type": "wall",
+      "bbox_2d": {
+        "x": 0.33,
+        "y": 0.24,
+        "width": 0.32,
+        "height": 0.5
+      },
+      "region": "center",
+      "depth_hint": "mid",
+      "priority": "high",
+      "occlusion": "partial",
+      "uncertainty": ["occluded"],
+      "world_candidate_types": ["BoundarySurface", "WallSurface", "InteriorWallSurface"],
+      "world_alignment_note": "Candidate hint only; exact world class should be resolved downstream.",
+      "confidence": 0.86,
+      "evidence": "Dominant bright wall plane is visible in the central indoor scene."
+    },
+    {
+      "id": "door_center_left",
+      "label": "gray door",
+      "type": "door",
+      "bbox_2d": {
+        "x": 0.39,
+        "y": 0.36,
+        "width": 0.07,
+        "height": 0.24
+      },
+      "region": "center_left",
+      "depth_hint": "mid",
+      "priority": "high",
+      "occlusion": "none",
+      "world_candidate_types": ["Opening", "Door"],
+      "confidence": 0.82,
+      "evidence": "Gray rectangular door-like region appears on the left portion of the central wall."
+    },
+    {
+      "id": "monitor_right",
+      "label": "right foreground monitor",
+      "type": "object",
+      "subtype": "monitor",
+      "bbox_2d": {
+        "x": 0.64,
+        "y": 0.46,
+        "width": 0.28,
+        "height": 0.35
+      },
+      "region": "center_right",
+      "depth_hint": "near",
+      "priority": "medium",
+      "occlusion": "none",
+      "uncertainty": ["screen_content"],
+      "world_candidate_types": ["BuildingFurniture"],
+      "world_alignment_note": "Physical monitor is a furniture-like candidate; screen contents should not drive graph extraction.",
+      "confidence": 0.9,
+      "evidence": "Large foreground display occupies the right side of the image."
+    },
+    {
+      "id": "display_stand_right",
+      "label": "right monitor stand",
+      "type": "object",
+      "subtype": "display_stand",
+      "bbox_2d": {
+        "x": 0.72,
+        "y": 0.76,
+        "width": 0.12,
+        "height": 0.19
+      },
+      "region": "lower_right",
+      "depth_hint": "near",
+      "priority": "medium",
+      "occlusion": "partial",
+      "world_candidate_types": ["BuildingFurniture"],
+      "confidence": 0.78,
+      "evidence": "Support structure is visible below the right foreground monitor."
+    },
+    {
+      "id": "floor_main",
+      "label": "glossy lobby floor",
+      "type": "floor",
+      "bbox_2d": {
+        "x": 0.0,
+        "y": 0.66,
+        "width": 1.0,
+        "height": 0.34
+      },
+      "region": "bottom",
+      "depth_hint": "near",
+      "priority": "support",
+      "occlusion": "partial",
+      "uncertainty": ["glare_or_reflection"],
+      "world_candidate_types": ["BoundarySurface", "FloorSurface"],
+      "confidence": 0.88,
+      "evidence": "Reflective floor plane spans the lower portion of the indoor image."
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_monitor_right_in_front_of_wall_center",
+      "source": "monitor_right",
+      "target": "wall_center",
+      "relation": "in_front_of",
+      "uncertainty": ["viewpoint_inferred", "occluded"],
+      "confidence": 0.75,
+      "evidence": "Right monitor occupies the foreground and occludes part of the wall area."
+    },
+    {
+      "id": "edge_display_stand_right_supports_monitor_right",
+      "source": "display_stand_right",
+      "target": "monitor_right",
+      "relation": "supports",
+      "world_relation_hints": ["TOUCHES"],
+      "confidence": 0.9,
+      "evidence": "The monitor sits on the visible stand."
+    },
+    {
+      "id": "edge_display_stand_right_standing_on_floor_main",
+      "source": "display_stand_right",
+      "target": "floor_main",
+      "relation": "standing_on",
+      "world_relation_hints": ["TOUCHES", "INSIDE"],
+      "confidence": 0.86,
+      "evidence": "The stand reaches the floor plane in the lower-right image region."
+    },
+    {
+      "id": "edge_door_center_left_attached_to_wall_center",
+      "source": "door_center_left",
+      "target": "wall_center",
+      "relation": "attached_to",
+      "world_relation_hints": ["HAS_OPENING", "TOUCHES"],
+      "confidence": 0.84,
+      "evidence": "Door is embedded in the central wall plane."
+    }
+  ],
+  "global_observations": [
+    "This is a synthetic schema example, not a full annotation.",
+    "Visible people, if any, should be ignored as graph nodes.",
+    "Monitor screen contents are down-weighted relative to stable physical objects."
+  ]
+}
